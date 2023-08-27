@@ -1,49 +1,32 @@
-const express = require('express');
-const mysql = require('mysql2');
-const usersRotes = require('./routes/users')
-const middlewareLogRequest = require('./middleware/log')
+require("dotenv").config();
+const PORT = process.env.PORT || 5000;
+const express = require("express");
+const usersRotes = require("./routes/users");
+const middlewareLogRequest = require("./middleware/log");
+const upload = require("./middleware/multer");
 const cors = require('cors')
 const http = require('http')
-const dbPool = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    database: 'express_mysql',
-    port:'3307'
-  });
-
 const app = express();
 
 app.use(middlewareLogRequest);
-app.use(express.json())
-app.use(cors());
+app.use(express.json());
+app.use(cors())
+app.use("/image", express.static("public/img"));
 
 // app.method(path, handler);
-app.use('/users', usersRotes);
+app.use("/users", usersRotes);
+app.post("/upload", upload.single("photo"), (req, res) => {
+  res.json({
+    message: "Upload berhasil",
+  });
+})
 
-
-
-app.use('/cek', (req, res) => {
-    dbPool.query('SELECT * FROM users', (err, rows) => {
-        console.log("ASU ", rows);
-        if(err){
-            res.json({
-                message: 'connection failed'
-            })
-        }
-
-        res.status(200).json({
-            message: 'connection success',
-            data: rows,
-        })
+app.use((err, req, res, next ) => {
+    res.json({
+        message: err.message
     })
-
 })
 
-app.use ("/", (req, res) => {
-    res.status(200).json('Hello Word');
-})
-
-
-app.listen(4000, () => {
-    console.log('Server berhasil di running di port 4000');
-})
+app.listen(PORT, () => {
+  console.log(`Server berhasil di running di port ${PORT}`);
+});
